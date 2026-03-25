@@ -13,7 +13,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+
 import { useRouter } from 'next/navigation';
 import { 
   Search, 
@@ -70,7 +70,6 @@ const CATEGORIES = [
     nameEn: 'Emergency',
     icon: AlertTriangle,
     color: '#E31C5F',
-    imageIcon: '/images/icons/emergency.png',
     groups: [
       {
         name: 'خدمات طارئة',
@@ -96,7 +95,6 @@ const CATEGORIES = [
     nameEn: 'Market',
     icon: ShoppingBag,
     color: '#FC642D',
-    imageIcon: '/images/icons/market.png',
     groups: [
       {
         name: 'وظائف وعقارات',
@@ -122,7 +120,6 @@ const CATEGORIES = [
     nameEn: 'Directory',
     icon: MapPin,
     color: '#00A699',
-    imageIcon: '/images/icons/directory.png',
     groups: [
       {
         name: 'طعام وضيافة',
@@ -167,7 +164,6 @@ const CATEGORIES = [
     nameEn: 'Info',
     icon: Newspaper,
     color: '#6366F1',
-    imageIcon: '/images/icons/info.png',
     groups: [
       {
         name: 'معلومات يومية',
@@ -622,14 +618,11 @@ export default function Header() {
                     onClick={() => setHoveredCategory(isSelected ? null : category.id)}
                     className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all group"
                   >
-                    {/* أيقونة SVG كبيرة - تختفي عند التمرير للأسفل على الجوال */}
+                    {/* أيقونة SVG - تختفي عند التمرير للأسفل على الجوال */}
                     <div className={`transition-all duration-200 ${isScrollingDown ? 'h-0 opacity-0 overflow-hidden' : 'h-10 opacity-100'}`}>
-                      <Image 
-                        src={category.imageIcon}
-                        alt={isArabic ? category.name : category.nameEn}
-                        width={40}
-                        height={40}
-                        className={`transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
+                      <category.icon 
+                        className={`w-10 h-10 transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
+                        style={{ color: category.color }}
                       />
                     </div>
                     <span className={`text-sm font-medium whitespace-nowrap transition-colors ${
@@ -667,12 +660,9 @@ export default function Header() {
                       onClick={() => setHoveredCategory(isSelected ? null : category.id)}
                       className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl transition-all group"
                     >
-                      <Image 
-                        src={category.imageIcon}
-                        alt={isArabic ? category.name : category.nameEn}
-                        width={48}
-                        height={48}
-                        className={`transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
+                      <category.icon 
+                        className={`w-12 h-12 transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
+                        style={{ color: category.color }}
                       />
                       <span className={`text-sm font-medium whitespace-nowrap transition-colors ${
                         isSelected ? 'text-gray-900 font-semibold' : 'text-gray-600 group-hover:text-gray-900'
