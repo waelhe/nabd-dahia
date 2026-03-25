@@ -1,0 +1,1442 @@
+// ========================================
+// نبض الضاحية وقدسيا - Prisma Schema
+// دليل خدمات محلي شامل
+// ========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// 1. المستخدمين والهوية (Users & Identity)
+// ========================================
+
+/// المستخدم
+model User {
+  id                String   @id @default(cuid())
+  email             String?  @unique
+  phone             String?  @unique
+  passwordHash      String?
+  
+  // المعلومات الأساسية
+  firstName         String
+  lastName          String
+  displayName       String?
+  avatar            String?
+  bio               String?
+  dateOfBirth       DateTime?
+  gender            String?  // male, female, other
+  nationality       String?
+  
+  // الموقع
+  country           String?
+  city              String?
+  address           String?
+  latitude          Float?
+  longitude         Float?
+  
+  // الحالة والأدوار
+  status            String   @default("pending") // pending, active, suspended, deleted
+  role              String   @default("user")    // guest, user, host, company, admin, super_admin
+  emailVerifiedAt   DateTime?
+  phoneVerifiedAt   DateTime?
+  
+  // العضوية والولاء
+  membershipLevel   String   @default("bronze")  // bronze, silver, gold, platinum
+  loyaltyPoints     Int      @default(0)
+  totalSpent        Float    @default(0)
+  totalBookings     Int      @default(0)
+  
+  // للمضيفين
+  hostingSince      DateTime?
+  responseRate      Float?
+  responseTime      Int?     // بالدقائق
+  totalListings     Int      @default(0)
+  isSuperhost       Boolean  @default(false)
+  
+  // للشركات
+  companyId         String?
+  
+  // التقييمات
+  ratingAverage     Float?
+  ratingCount       Int      @default(0)
+  
+  // التفضيلات
+  preferredLanguage String   @default("ar")
+  preferredCurrency String   @default("SYP")
+  notificationSettings String? // JSON
+  
+  // التواريخ
+  lastLoginAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // الحذف الناعم
+  deletedAt         DateTime?
+  deletedBy         String?
+  
+  // الإصدار للتزامن المتفائل
+  version           Int      @default(1)
+  
+  // العلاقات
+  company           Company?           @relation(fields: [companyId], references: [id])
+  sessions          UserSession[]
+  preferences       UserPreference[]
+  listings          Listing[]
+  bookingsAsGuest   Booking[]          @relation("GuestBookings")
+  bookingsAsHost    Booking[]          @relation("HostBookings")
+  reviewsGiven      Review[]           @relation("ReviewsGiven")
+  reviewsReceived   Review[]           @relation("ReviewsReceived")
+  payments          Payment[]
+  notifications     Notification[]
+  favorites         Favorite[]
+  loyaltyTransactions LoyaltyTransaction[]
+  reports           Report[]           @relation("ReportsByUser")
+  reportedBy        Report[]           @relation("ReportsOnUser")
+  auditLogs         AuditLog[]
+  companyEmployees  CompanyEmployee[]
+  hostVerifications HostVerification[]
+  
+  @@index([email])
+  @@index([phone])
+  @@index([status])
+  @@index([role])
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+/// جلسة المستخدم
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  refreshToken String   @unique
+  deviceInfo   String?
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([refreshToken])
+}
+
+/// تفضيلات المستخدم
+model UserPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String   // notification, privacy, display, etc.
+  key       String
+  value     String   // JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, category, key])
+  @@index([userId])
+}
+
+/// توثيق المضيف
+model HostVerification {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String   // identity, phone, email, address
+  status       String   @default("pending") // pending, approved, rejected
+  documentUrl  String?
+  verifiedAt   DateTime?
+  verifiedBy   String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([status])
+}
+
+// ========================================
+// 2. الشركات (Companies)
+// ========================================
+
+/// الشركة
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String?
+  logo            String?
+  coverImage      String?
+  type            String   // hotel, travel_agency, medical, education, business
+  registrationNumber String?
+  taxId           String?
+  
+  // معلومات الاتصال
+  email           String?
+  phone           String?
+  website         String?
+  
+  // الموقع
+  country         String?
+  city            String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  
+  // الحالة
+  status          String   @default("pending") // pending, active, suspended, deleted
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  
+  // الإحصائيات
+  ratingAverage   Float?
+  ratingCount     Int      @default(0)
+  totalListings   Int      @default(0)
+  totalBookings   Int      @default(0)
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  // العلاقات
+  users           User[]
+  employees       CompanyEmployee[]
+  services        CompanyService[]
+  listings        Listing[]
+  bookings        Booking[]
+  
+  @@index([slug])
+  @@index([type])
+  @@index([status])
+}
+
+/// موظفو الشركة
+model CompanyEmployee {
+  id        String   @id @default(cuid())
+  companyId String
+  userId    String
+  role      String   // owner, manager, staff
+  permissions String? // JSON
+  status    String   @default("active")
+  invitedAt DateTime?
+  joinedAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, userId])
+  @@index([companyId])
+  @@index([userId])
+}
+
+/// خدمات الشركة
+model CompanyService {
+  id          String   @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  type        String   // accommodation, tour, medical, education, business
+  price       Float?
+  currency    String   @default("SYP")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@index([companyId])
+  @@index([type])
+}
+
+// ========================================
+// 3. الإقامات والوجهات (Listings & Destinations)
+// ========================================
+
+/// الإقامة/الخدمة
+model Listing {
+  id              String   @id @default(cuid())
+  hostId          String
+  companyId       String?
+  
+  // المعلومات الأساسية
+  title           String
+  slug            String   @unique
+  description     String?
+  type            String   // apartment, hotel, villa, tour, medical, education, business
+  category        String?  // tourism, medical, education, business
+  
+  // الموقع
+  country         String?
+  city            String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  neighborhood    String?
+  
+  // التفاصيل
+  capacity        Int      @default(1)
+  bedrooms        Int?
+  bathrooms       Int?
+  beds            Int?
+  size            Float?   // بالمتر المربع
+  
+  // الأسعار
+  basePrice       Float
+  currency        String   @default("SYP")
+  cleaningFee     Float?
+  securityDeposit Float?
+  weekendPrice    Float?
+  seasonalPricing String?  // JSON
+  
+  // الشروط
+  minNights       Int      @default(1)
+  maxNights       Int?
+  checkInTime     String?  @default("14:00")
+  checkOutTime    String?  @default("12:00")
+  instantBook     Boolean  @default(false)
+  
+  // القواعد
+  houseRules      String?  // JSON
+  cancellationPolicy String @default("moderate")
+  smokingAllowed  Boolean  @default(false)
+  petsAllowed     Boolean  @default(false)
+  partiesAllowed  Boolean  @default(false)
+  
+  // الحالة
+  status          String   @default("draft") // draft, pending, active, suspended, deleted
+  publishedAt     DateTime?
+  featured        Boolean  @default(false)
+  featuredUntil   DateTime?
+  
+  // التقييمات
+  ratingAverage   Float?
+  ratingCount     Int      @default(0)
+  
+  // الإحصائيات
+  viewCount       Int      @default(0)
+  bookingCount    Int      @default(0)
+  favoriteCount   Int      @default(0)
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  deletedBy       String?
+  
+  // الإصدار
+  version         Int      @default(1)
+  
+  // العلاقات
+  host            User     @relation(fields: [hostId], references: [id])
+  company         Company? @relation(fields: [companyId], references: [id])
+  images          ListingImage[]
+  amenities       ListingAmenity[]
+  availability    ListingAvailability[]
+  bookings        Booking[]
+  reviews         Review[]
+  favorites       Favorite[]
+  translations    ListingTranslation[]
+  
+  @@index([hostId])
+  @@index([companyId])
+  @@index([type])
+  @@index([status])
+  @@index([city])
+  @@index([createdAt])
+  @@index([ratingAverage])
+  @@index([basePrice])
+}
+
+/// صور الإقامة
+model ListingImage {
+  id        String   @id @default(cuid())
+  listingId String
+  url       String
+  caption   String?
+  alt       String?
+  order     Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  @@index([listingId])
+}
+
+/// مرافق الإقامة
+model ListingAmenity {
+  id        String   @id @default(cuid())
+  listingId String
+  name      String
+  icon      String?
+  category  String?  // general, safety, accessibility, etc.
+  included  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  @@unique([listingId, name])
+  @@index([listingId])
+}
+
+/// توفر الإقامة
+model ListingAvailability {
+  id          String   @id @default(cuid())
+  listingId   String
+  date        DateTime
+  isAvailable Boolean  @default(true)
+  price       Float?
+  minNights   Int?
+  maxNights   Int?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  @@unique([listingId, date])
+  @@index([listingId])
+  @@index([date])
+}
+
+/// ترجمات الإقامة
+model ListingTranslation {
+  id          String   @id @default(cuid())
+  listingId   String
+  language    String   // ar, en, fr, tr, ru
+  title       String?
+  description String?
+  houseRules  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  @@unique([listingId, language])
+  @@index([listingId])
+}
+
+/// المفضلة
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+}
+
+// ========================================
+// 4. الحجوزات (Bookings)
+// ========================================
+
+/// الحجز
+model Booking {
+  id              String   @id @default(cuid())
+  guestId         String
+  hostId          String
+  listingId       String
+  companyId       String?
+  
+  // التواريخ
+  checkIn         DateTime
+  checkOut        DateTime
+  checkInActual   DateTime?
+  checkOutActual  DateTime?
+  
+  // الضيوف
+  guests          Int      @default(1)
+  adults          Int      @default(1)
+  children        Int      @default(0)
+  infants         Int      @default(0)
+  
+  // الأسعار
+  basePrice       Float
+  cleaningFee     Float?
+  serviceFee      Float    @default(0)
+  taxes           Float    @default(0)
+  discount        Float    @default(0)
+  totalPrice      Float
+  currency        String   @default("SYP")
+  
+  // الحالة
+  status          String   @default("pending") // pending, confirmed, cancelled, rejected, completed, no_show
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  cancelledBy     String?
+  cancellationReason String?
+  completedAt     DateTime?
+  
+  // معلومات إضافية
+  guestNotes      String?
+  hostNotes       String?
+  specialRequests String?
+  
+  // الدفع
+  paymentStatus   String   @default("pending") // pending, processing, paid, failed, refunded
+  paidAt          DateTime?
+  refundAmount    Float?
+  refundedAt      DateTime?
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  version         Int      @default(1)
+  
+  // العلاقات
+  guest           User     @relation("GuestBookings", fields: [guestId], references: [id])
+  host            User     @relation("HostBookings", fields: [hostId], references: [id])
+  listing         Listing  @relation(fields: [listingId], references: [id])
+  company         Company? @relation(fields: [companyId], references: [id])
+  payments        Payment[]
+  bookingGuests   BookingGuest[] @relation("BookingGuests")
+  review          Review?
+  
+  @@index([guestId])
+  @@index([hostId])
+  @@index([listingId])
+  @@index([status])
+  @@index([checkIn])
+  @@index([createdAt])
+}
+
+/// ضيوف الحجز
+model BookingGuest {
+  id          String   @id @default(cuid())
+  bookingId   String
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  isPrimary   Boolean  @default(false)
+  idType      String?  // passport, national_id
+  idNumber    String?
+  dateOfBirth DateTime?
+  nationality String?
+  createdAt   DateTime @default(now())
+  
+  booking     Booking  @relation("BookingGuests", fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@index([bookingId])
+}
+
+// ========================================
+// 5. المدفوعات والضمان (Payments & Escrow)
+// ========================================
+
+/// الدفعة
+model Payment {
+  id              String   @id @default(cuid())
+  bookingId       String
+  userId          String
+  
+  // المعلومات
+  amount          Float
+  currency        String   @default("SYP")
+  type            String   // booking, deposit, refund, fee
+  method          String   // card, bank_transfer, cash, wallet
+  
+  // الحالة
+  status          String   @default("pending") // pending, processing, completed, failed, refunded
+  transactionId   String?
+  gatewayResponse String?  // JSON
+  
+  // التواريخ
+  processedAt     DateTime?
+  failedAt        DateTime?
+  refundedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // العلاقات
+  booking         Booking  @relation(fields: [bookingId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+  refunds         Refund[]
+  
+  @@index([bookingId])
+  @@index([userId])
+  @@index([status])
+  @@index([transactionId])
+}
+
+/// الاسترداد
+model Refund {
+  id            String   @id @default(cuid())
+  paymentId     String
+  amount        Float
+  currency      String
+  reason        String?
+  status        String   @default("pending") // pending, approved, rejected, processed
+  processedAt   DateTime?
+  processedBy   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  payment       Payment  @relation(fields: [paymentId], references: [id])
+  
+  @@index([paymentId])
+  @@index([status])
+}
+
+/// الضمان (Escrow)
+model Escrow {
+  id            String   @id @default(cuid())
+  bookingId     String   @unique
+  amount        Float
+  currency      String
+  status        String   @default("held") // held, released, refunded, disputed
+  heldAt        DateTime @default(now())
+  releasedAt    DateTime?
+  refundedAt    DateTime?
+  releasedTo    String?  // host or guest
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([bookingId])
+  @@index([status])
+}
+
+// ========================================
+// 6. التقييمات والولاء (Reviews & Loyalty)
+// ========================================
+
+/// التقييم
+model Review {
+  id            String   @id @default(cuid())
+  bookingId     String   @unique
+  listingId     String
+  reviewerId    String
+  revieweeId    String
+  
+  // التقييمات
+  ratingOverall Int      // 1-5
+  ratingCleanliness Int?
+  ratingCommunication Int?
+  ratingLocation Int?
+  ratingCheckIn Int?
+  ratingValue Int?
+  
+  // المحتوى
+  comment       String?
+  response      String?
+  respondedAt   DateTime?
+  
+  // الحالة
+  status        String   @default("active") // active, hidden, deleted
+  reportedAt    DateTime?
+  
+  // التواريخ
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // العلاقات
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  listing       Listing  @relation(fields: [listingId], references: [id])
+  reviewer      User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewee      User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+  
+  @@index([bookingId])
+  @@index([listingId])
+  @@index([reviewerId])
+  @@index([revieweeId])
+  @@index([createdAt])
+}
+
+/// نقاط الولاء
+model LoyaltyTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int      // موجب = اكتساب، سالب = استهلاك
+  balance     Int      // الرصيد بعد العملية
+  type        String   // booking, review, referral, reward, redemption
+  reference   String?  // ID المرجع (حجز، تقييم، إلخ)
+  description String?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ========================================
+// 7. الإشعارات (Notifications)
+// ========================================
+
+/// الإشعار
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // booking, payment, review, system, etc.
+  title       String
+  message     String
+  data        String?  // JSON
+  readAt      DateTime?
+  read        Boolean  @default(false)
+  sentVia     String?  // email, sms, push, in_app
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([type])
+  @@index([read])
+  @@index([createdAt])
+}
+
+/// قالب الإشعار
+model NotificationTemplate {
+  id          String   @id @default(cuid())
+  type        String   @unique
+  subject     String?
+  title       String
+  body        String
+  variables   String?  // JSON array of variable names
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([type])
+}
+
+// ========================================
+// 8. العلاج (Medical)
+// ========================================
+
+/// مركز طبي
+model MedicalCenter {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String?
+  type            String   // hospital, clinic, dental, eye, cosmetic
+  logo            String?
+  coverImage      String?
+  
+  // معلومات الاتصال
+  email           String?
+  phone           String?
+  website         String?
+  
+  // الموقع
+  country         String?
+  city            String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  
+  // التفاصيل
+  specialties     String?  // JSON array
+  accreditation   String?
+  languages       String?  // JSON array
+  
+  // الحالة
+  status          String   @default("pending")
+  verifiedAt      DateTime?
+  
+  // التقييمات
+  ratingAverage   Float?
+  ratingCount     Int      @default(0)
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  doctors         Doctor[]
+  medicalServices MedicalService[]
+  medicalBookings MedicalBooking[]
+  
+  @@index([slug])
+  @@index([type])
+  @@index([status])
+  @@index([city])
+}
+
+/// الطبيب
+model Doctor {
+  id              String   @id @default(cuid())
+  centerId        String
+  name            String
+  slug            String   @unique
+  specialty       String
+  qualifications  String?  // JSON array
+  bio             String?
+  photo           String?
+  languages       String?  // JSON array
+  experience      Int?     // سنوات الخبرة
+  consultationFee Float?
+  currency        String   @default("SYP")
+  
+  // الحالة
+  status          String   @default("active")
+  
+  // التقييمات
+  ratingAverage   Float?
+  ratingCount     Int      @default(0)
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  center          MedicalCenter @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  medicalBookings MedicalBooking[]
+  
+  @@index([centerId])
+  @@index([specialty])
+  @@index([status])
+}
+
+/// الخدمة الطبية
+model MedicalService {
+  id              String   @id @default(cuid())
+  centerId        String
+  name            String
+  description     String?
+  category        String?
+  duration        Int?     // بالدقائق
+  price           Float?
+  currency        String   @default("SYP")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  center          MedicalCenter @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  medicalBookings MedicalBooking[]
+  
+  @@index([centerId])
+  @@index([category])
+}
+
+/// الحجز الطبي
+model MedicalBooking {
+  id              String   @id @default(cuid())
+  centerId        String
+  doctorId        String?
+  serviceId       String?
+  userId          String?
+  
+  // معلومات المريض
+  patientName     String
+  patientEmail    String?
+  patientPhone    String
+  patientNotes    String?
+  
+  // الموعد
+  appointmentAt   DateTime
+  duration        Int?     // بالدقائق
+  
+  // الأسعار
+  price           Float?
+  currency        String   @default("SYP")
+  
+  // الحالة
+  status          String   @default("pending") // pending, confirmed, cancelled, completed
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  completedAt     DateTime?
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  center          MedicalCenter @relation(fields: [centerId], references: [id])
+  doctor          Doctor?       @relation(fields: [doctorId], references: [id])
+  service         MedicalService? @relation(fields: [serviceId], references: [id])
+  
+  @@index([centerId])
+  @@index([doctorId])
+  @@index([appointmentAt])
+  @@index([status])
+}
+
+// ========================================
+// 9. الدراسة (Education)
+// ========================================
+
+/// المؤسسة التعليمية
+model Institution {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  description     String?
+  type            String   // university, institute, language_school, vocational
+  logo            String?
+  coverImage      String?
+  
+  // معلومات الاتصال
+  email           String?
+  phone           String?
+  website         String?
+  
+  // الموقع
+  country         String?
+  city            String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  
+  // التفاصيل
+  accreditation   String?
+  languages       String?  // JSON array
+  
+  // الحالة
+  status          String   @default("pending")
+  verifiedAt      DateTime?
+  
+  // التقييمات
+  ratingAverage   Float?
+  ratingCount     Int      @default(0)
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  programs        Program[]
+  courses         Course[]
+  applications    StudentApplication[]
+  
+  @@index([slug])
+  @@index([type])
+  @@index([status])
+  @@index([city])
+}
+
+/// البرنامج الدراسي
+model Program {
+  id              String   @id @default(cuid())
+  institutionId   String
+  name            String
+  slug            String   @unique
+  description     String?
+  type            String   // bachelor, master, phd, diploma, certificate
+  field           String?
+  duration        Int?     // بالأشهر
+  tuitionFee      Float?
+  currency        String   @default("SYP")
+  language        String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  institution     Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  applications    StudentApplication[]
+  
+  @@index([institutionId])
+  @@index([type])
+  @@index([field])
+}
+
+/// الدورة
+model Course {
+  id              String   @id @default(cuid())
+  institutionId   String
+  name            String
+  slug            String   @unique
+  description     String?
+  category        String?
+  duration        Int?     // بالساعات
+  price           Float?
+  currency        String   @default("SYP")
+  language        String?
+  level           String?  // beginner, intermediate, advanced
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  institution     Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  applications    StudentApplication[]
+  
+  @@index([institutionId])
+  @@index([category])
+}
+
+/// طلب الالتحاق
+model StudentApplication {
+  id              String   @id @default(cuid())
+  institutionId   String
+  programId       String?
+  courseId        String?
+  userId          String?
+  
+  // معلومات الطالب
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  nationality     String?
+  dateOfBirth     DateTime?
+  
+  // المستندات
+  documents       String?  // JSON array of URLs
+  
+  // الحالة
+  status          String   @default("pending") // pending, under_review, accepted, rejected
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  notes           String?
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  institution     Institution @relation(fields: [institutionId], references: [id])
+  program         Program?    @relation(fields: [programId], references: [id])
+  course          Course?     @relation(fields: [courseId], references: [id])
+  
+  @@index([institutionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ========================================
+// 10. العمل والاستثمار (Business)
+// ========================================
+
+/// فرصة العمل/الاستثمار
+model Opportunity {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String?
+  type            String   // job, investment, partnership, franchise
+  category        String?
+  
+  // التفاصيل
+  requirements    String?  // JSON
+  benefits        String?  // JSON
+  salary          String?
+  investmentMin   Float?
+  investmentMax   Float?
+  currency        String   @default("SYP")
+  
+  // الموقع
+  country         String?
+  city            String?
+  
+  // الشركة
+  companyId       String?
+  
+  // الحالة
+  status          String   @default("active")
+  deadline        DateTime?
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  applications    BusinessApplication[]
+  
+  @@index([slug])
+  @@index([type])
+  @@index([status])
+  @@index([city])
+}
+
+/// المؤتمر
+model Conference {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String?
+  type            String?
+  
+  // التواريخ
+  startDate       DateTime
+  endDate         DateTime
+  
+  // الموقع
+  venue           String?
+  country         String?
+  city            String?
+  address         String?
+  isVirtual       Boolean  @default(false)
+  
+  // التفاصيل
+  capacity        Int?
+  price           Float?
+  currency        String   @default("SYP")
+  agenda          String?  // JSON
+  speakers        String?  // JSON
+  
+  // الحالة
+  status          String   @default("upcoming")
+  registrationDeadline DateTime?
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  registrations   ConferenceRegistration[]
+  
+  @@index([slug])
+  @@index([status])
+  @@index([startDate])
+}
+
+/// تسجيل المؤتمر
+model ConferenceRegistration {
+  id              String   @id @default(cuid())
+  conferenceId    String
+  userId          String?
+  
+  // معلومات المسجل
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  company         String?
+  jobTitle        String?
+  
+  // الحالة
+  status          String   @default("registered")
+  registeredAt    DateTime @default(now())
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  conference      Conference @relation(fields: [conferenceId], references: [id])
+  
+  @@unique([conferenceId, email])
+  @@index([conferenceId])
+}
+
+/// طلب العمل/الاستثمار
+model BusinessApplication {
+  id              String   @id @default(cuid())
+  opportunityId   String
+  userId          String?
+  
+  // معلومات المتقدم
+  firstName       String
+  lastName        String
+  email           String
+  phone           String
+  company         String?
+  message         String?
+  
+  // المستندات
+  documents       String?  // JSON array of URLs
+  
+  // الحالة
+  status          String   @default("pending")
+  submittedAt     DateTime @default(now())
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  notes           String?
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  opportunity     Opportunity @relation(fields: [opportunityId], references: [id])
+  
+  @@index([opportunityId])
+  @@index([status])
+}
+
+// ========================================
+// 11. المجتمع والسوق (Community & Marketplace)
+// ========================================
+
+/// المنشور
+model Post {
+  id              String   @id @default(cuid())
+  authorId        String
+  title           String?
+  content         String
+  type            String   @default("discussion") // discussion, question, guide, event
+  category        String?
+  tags            String?  // JSON array
+  
+  // الملفات
+  images          String?  // JSON array
+  videos          String?  // JSON array
+  
+  // الإحصائيات
+  viewCount       Int      @default(0)
+  likeCount       Int      @default(0)
+  commentCount    Int      @default(0)
+  
+  // الحالة
+  status          String   @default("active") // active, hidden, deleted
+  featured        Boolean  @default(false)
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  comments        Comment[]
+  likes           PostLike[]
+  
+  @@index([authorId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// التعليق
+model Comment {
+  id              String   @id @default(cuid())
+  postId          String
+  parentId        String?
+  authorId        String
+  content         String
+  
+  // الإحصائيات
+  likeCount       Int      @default(0)
+  
+  // الحالة
+  status          String   @default("active")
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  post            Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  replies         Comment[] @relation("CommentReplies")
+  parent          Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  
+  @@index([postId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+/// إعجاب المنشور
+model PostLike {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+/// منتج السوق
+model MarketplaceItem {
+  id              String   @id @default(cuid())
+  sellerId        String
+  title           String
+  slug            String   @unique
+  description     String?
+  category        String?
+  price           Float?
+  currency        String   @default("SYP")
+  
+  // الملفات
+  images          String?  // JSON array
+  
+  // الحالة
+  condition       String?  // new, like_new, good, fair
+  status          String   @default("active")
+  
+  // الإحصائيات
+  viewCount       Int      @default(0)
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  
+  @@index([sellerId])
+  @@index([slug])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ========================================
+// 12. الإشراف والتقارير (Moderation & Reports)
+// ========================================
+
+/// البلاغ
+model Report {
+  id              String   @id @default(cuid())
+  reporterId      String
+  reportedUserId  String?
+  reportedType    String   // user, listing, review, post, etc.
+  reportedId      String
+  reason          String
+  description     String?
+  evidence        String?  // JSON array of URLs
+  
+  // الحالة
+  status          String   @default("pending") // pending, under_review, resolved, dismissed
+  priority        String   @default("normal")  // low, normal, high, urgent
+  
+  // المراجعة
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  action          String?
+  notes           String?
+  
+  // التواريخ
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  reporter        User     @relation("ReportsByUser", fields: [reporterId], references: [id])
+  reportedUser    User?    @relation("ReportsOnUser", fields: [reportedUserId], references: [id])
+  
+  @@index([reporterId])
+  @@index([reportedType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// سجل التدقيق
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  entityType  String
+  entityId    String
+  oldValue    String?  // JSON
+  newValue    String?  // JSON
+  ipAddress   String?
+  userAgent   String?
+  metadata    String?  // JSON
+  createdAt   DateTime @default(now())
+  
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+}
+
+// ========================================
+// 13. النظام والإعدادات (System & Settings)
+// ========================================
+
+/// الإعداد
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string") // string, number, boolean, json
+  category  String?
+  public    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([key])
+  @@index([category])
+}
+
+/// الترجمة
+model Translation {
+  id        String   @id @default(cuid())
+  key       String
+  language  String
+  value     String
+  namespace String?  @default("common")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([key, language, namespace])
+  @@index([key])
+  @@index([language])
+}
+
+/// الملف
+model File {
+  id          String   @id @default(cuid())
+  name        String
+  originalName String
+  mimeType    String
+  size        Int
+  url         String
+  path        String?
+  uploaderId  String?
+  entityType  String?
+  entityId    String?
+  metadata    String?  // JSON
+  createdAt   DateTime @default(now())
+  
+  @@index([uploaderId])
+  @@index([entityType, entityId])
+}
+
+/// المهمة المجدولة
+model ScheduledJob {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  payload     String?  // JSON
+  status      String   @default("pending") // pending, running, completed, failed
+  scheduledAt DateTime
+  startedAt   DateTime?
+  completedAt DateTime?
+  error       String?
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([type])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+/// API Key
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  userId      String?
+  permissions String?  // JSON
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([key])
+  @@index([userId])
+}
+
+/// معدل الطلبات (Rate Limiting)
+model RateLimit {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  count       Int      @default(1)
+  resetAt     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([key])
+  @@index([resetAt])
+}
