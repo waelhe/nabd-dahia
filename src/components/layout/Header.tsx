@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
   Search, 
@@ -61,118 +62,103 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
-// جميع أقسام الموقع منظمة مع أيقونات وألوان
+// الأجزاء الرئيسية مع مجموعاتها وأقسامها
 const CATEGORIES = [
   { 
-    id: 'restaurants-cafes', 
-    name: 'مطاعم ومقاهي', 
-    nameEn: 'Restaurants',
-    icon: UtensilsCrossed,
-    color: '#FF5A5F',
-    subcategories: [
-      { id: 'restaurants', name: 'مطاعم', nameEn: 'Restaurants', icon: UtensilsCrossed },
-      { id: 'cafes', name: 'مقاهي', nameEn: 'Cafes', icon: Coffee },
-      { id: 'sweets', name: 'حلويات', nameEn: 'Sweets', icon: Cake },
-      { id: 'fast-food', name: 'وجبات سريعة', nameEn: 'Fast Food', icon: UtensilsCrossed },
-    ]
-  },
-  { 
-    id: 'health', 
-    name: 'صحة', 
-    nameEn: 'Health',
-    icon: Stethoscope,
+    id: 'emergency', 
+    name: 'طوارئ', 
+    nameEn: 'Emergency',
+    icon: AlertTriangle,
     color: '#E31C5F',
-    subcategories: [
-      { id: 'doctors', name: 'أطباء', nameEn: 'Doctors', icon: Stethoscope },
-      { id: 'pharmacies', name: 'صيدليات', nameEn: 'Pharmacies', icon: Pill },
-      { id: 'medical-centers', name: 'مراكز طبية', nameEn: 'Medical Centers', icon: HeartPulse },
-      { id: 'beauty', name: 'جمال وعناية', nameEn: 'Beauty & Care', icon: Sparkles },
+    imageIcon: '/images/icons/emergency.png',
+    groups: [
+      {
+        name: 'خدمات طارئة',
+        nameEn: 'Emergency Services',
+        items: [
+          { id: 'urgent-services', name: 'خدمات عاجلة', nameEn: 'Urgent Services', icon: AlertTriangle },
+          { id: 'emergency-contacts', name: 'أرقام طوارئ', nameEn: 'Emergency Contacts', icon: Heart },
+        ]
+      },
+      {
+        name: 'صحة طارئة',
+        nameEn: 'Emergency Health',
+        items: [
+          { id: 'pharmacies', name: 'صيدليات مناوبة', nameEn: 'On-Duty Pharmacies', icon: Pill },
+          { id: 'medical-centers', name: 'مراكز طبية', nameEn: 'Medical Centers', icon: HeartPulse },
+        ]
+      }
     ]
   },
   { 
-    id: 'real-estate', 
-    name: 'عقارات', 
-    nameEn: 'Real Estate',
-    icon: Building,
-    color: '#00A699',
-    subcategories: [
-      { id: 'real-estate', name: 'عقارات', nameEn: 'Real Estate', icon: Building },
-      { id: 'hotels', name: 'فنادق', nameEn: 'Hotels', icon: Hotel },
-      { id: 'furnished-apartments', name: 'شقق مفروشة', nameEn: 'Furnished Apartments', icon: Key },
-    ]
-  },
-  { 
-    id: 'services', 
-    name: 'خدمات', 
-    nameEn: 'Services',
-    icon: Wrench,
-    color: '#78716C',
-    subcategories: [
-      { id: 'craftsmen', name: 'حرفيين', nameEn: 'Craftsmen', icon: Wrench },
-      { id: 'car-services', name: 'خدمات سيارات', nameEn: 'Car Services', icon: Car },
-      { id: 'laundry', name: 'مغاسل', nameEn: 'Laundry', icon: Shirt },
-      { id: 'event-services', name: 'خدمات مناسبات', nameEn: 'Event Services', icon: Calendar },
-    ]
-  },
-  { 
-    id: 'markets', 
-    name: 'أسواق', 
-    nameEn: 'Markets',
+    id: 'market', 
+    name: 'سوق', 
+    nameEn: 'Market',
     icon: ShoppingBag,
     color: '#FC642D',
-    subcategories: [
-      { id: 'markets', name: 'أسواق', nameEn: 'Markets', icon: ShoppingBag },
-      { id: 'retail-shops', name: 'محلات تجارية', nameEn: 'Retail Shops', icon: ShoppingBag },
-      { id: 'used-items', name: 'مستعمل', nameEn: 'Used Items', icon: Handshake },
-      { id: 'classifieds', name: 'إعلانات مبوبة', nameEn: 'Classifieds', icon: Newspaper },
+    imageIcon: '/images/icons/market.png',
+    groups: [
+      {
+        name: 'وظائف وعقارات',
+        nameEn: 'Jobs & Real Estate',
+        items: [
+          { id: 'jobs', name: 'وظائف شاغرة', nameEn: 'Jobs', icon: Briefcase },
+          { id: 'real-estate', name: 'عقارات', nameEn: 'Real Estate', icon: Building },
+        ]
+      },
+      {
+        name: 'سلع وإعلانات',
+        nameEn: 'Goods & Ads',
+        items: [
+          { id: 'used-items', name: 'مستعمل', nameEn: 'Used Items', icon: Package },
+          { id: 'classifieds', name: 'إعلانات مبوبة', nameEn: 'Classifieds', icon: Newspaper },
+        ]
+      }
     ]
   },
   { 
-    id: 'business', 
-    name: 'أعمال', 
-    nameEn: 'Business',
-    icon: Briefcase,
-    color: '#6366F1',
-    subcategories: [
-      { id: 'offices', name: 'مكاتب', nameEn: 'Offices', icon: Building },
-      { id: 'professionals', name: 'مهنيين', nameEn: 'Professionals', icon: Briefcase },
-      { id: 'financial-services', name: 'خدمات مالية', nameEn: 'Financial Services', icon: Banknote },
-      { id: 'legal', name: 'خدمات قانونية', nameEn: 'Legal Services', icon: Scale },
-    ]
-  },
-  { 
-    id: 'jobs', 
-    name: 'وظائف', 
-    nameEn: 'Jobs',
-    icon: Briefcase,
-    color: '#428BFF',
-    subcategories: [
-      { id: 'jobs', name: 'وظائف شاغرة', nameEn: 'Job Openings', icon: Briefcase },
-      { id: 'education', name: 'تعليم', nameEn: 'Education', icon: GraduationCap },
-    ]
-  },
-  { 
-    id: 'transport', 
-    name: 'نقل', 
-    nameEn: 'Transport',
-    icon: Car,
-    color: '#428BFF',
-    subcategories: [
-      { id: 'transport', name: 'نقل ومواصلات', nameEn: 'Transport', icon: CarTaxiFront },
-      { id: 'gas-stations', name: 'محطات وقود', nameEn: 'Gas Stations', icon: Fuel },
-    ]
-  },
-  { 
-    id: 'community', 
-    name: 'مجتمع', 
-    nameEn: 'Community',
-    icon: Users,
-    color: '#D939A0',
-    subcategories: [
-      { id: 'community', name: 'مجتمع', nameEn: 'Community', icon: Users },
-      { id: 'charity', name: 'خيرية', nameEn: 'Charity', icon: Heart },
-      { id: 'events', name: 'فعاليات', nameEn: 'Events', icon: Calendar },
-      { id: 'sports', name: 'رياضة', nameEn: 'Sports', icon: Dumbbell },
+    id: 'directory', 
+    name: 'دليل', 
+    nameEn: 'Directory',
+    icon: MapPin,
+    color: '#00A699',
+    imageIcon: '/images/icons/directory.png',
+    groups: [
+      {
+        name: 'طعام وضيافة',
+        nameEn: 'Food & Hospitality',
+        items: [
+          { id: 'restaurants', name: 'مطاعم', nameEn: 'Restaurants', icon: UtensilsCrossed },
+          { id: 'cafes', name: 'مقاهي', nameEn: 'Cafes', icon: Coffee },
+          { id: 'hotels', name: 'فنادق', nameEn: 'Hotels', icon: Hotel },
+        ]
+      },
+      {
+        name: 'صحة وجمال',
+        nameEn: 'Health & Beauty',
+        items: [
+          { id: 'doctors', name: 'أطباء', nameEn: 'Doctors', icon: Stethoscope },
+          { id: 'pharmacies', name: 'صيدليات', nameEn: 'Pharmacies', icon: Pill },
+          { id: 'beauty', name: 'تجميل', nameEn: 'Beauty', icon: Sparkles },
+        ]
+      },
+      {
+        name: 'خدمات',
+        nameEn: 'Services',
+        items: [
+          { id: 'craftsmen', name: 'حرفيين', nameEn: 'Craftsmen', icon: Wrench },
+          { id: 'car-services', name: 'سيارات', nameEn: 'Car Services', icon: Car },
+          { id: 'gas-stations', name: 'بنزين', nameEn: 'Gas Stations', icon: Fuel },
+        ]
+      },
+      {
+        name: 'تسوق',
+        nameEn: 'Shopping',
+        items: [
+          { id: 'markets', name: 'أسواق', nameEn: 'Markets', icon: ShoppingBag },
+          { id: 'retail-shops', name: 'محلات', nameEn: 'Shops', icon: ShoppingBag },
+        ]
+      }
     ]
   },
   { 
@@ -180,11 +166,25 @@ const CATEGORIES = [
     name: 'معلومات', 
     nameEn: 'Info',
     icon: Newspaper,
-    subcategories: [
-      { id: 'prayer-times', name: 'أوقات الصلاة', nameEn: 'Prayer Times', icon: Newspaper },
-      { id: 'weather', name: 'الطقس', nameEn: 'Weather', icon: Cloud },
-      { id: 'market-prices', name: 'أسعار السوق', nameEn: 'Market Prices', icon: Banknote },
-      { id: 'emergency-contacts', name: 'طوارئ', nameEn: 'Emergency', icon: AlertTriangle },
+    color: '#6366F1',
+    imageIcon: '/images/icons/info.png',
+    groups: [
+      {
+        name: 'معلومات يومية',
+        nameEn: 'Daily Info',
+        items: [
+          { id: 'prayer-times', name: 'أوقات الصلاة', nameEn: 'Prayer Times', icon: Calendar },
+          { id: 'weather', name: 'الطقس', nameEn: 'Weather', icon: Cloud },
+        ]
+      },
+      {
+        name: 'خدمات عامة',
+        nameEn: 'Public Services',
+        items: [
+          { id: 'government-services', name: 'خدمات حكومية', nameEn: 'Government', icon: Building },
+          { id: 'market-prices', name: 'أسعار السوق', nameEn: 'Market Prices', icon: Banknote },
+        ]
+      }
     ]
   },
 ];
@@ -201,6 +201,7 @@ export default function Header() {
   const { language } = useLanguage();
   const { user, signOut } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('qudsaya');
@@ -214,6 +215,7 @@ export default function Header() {
   const locationRef = useRef<HTMLDivElement>(null);
   const categoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollYRef = useRef(0);
   
   const isArabic = language === 'ar';
 
@@ -244,7 +246,17 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      const currentScrollY = window.scrollY;
+      
+      // تحديد اتجاه التمرير
+      if (currentScrollY > lastScrollYRef.current && currentScrollY > 80) {
+        setIsScrollingDown(true);
+      } else {
+        setIsScrollingDown(false);
+      }
+      lastScrollYRef.current = currentScrollY;
+      
+      setIsScrolled(currentScrollY > 10);
       // إغلاق القائمة المنسدلة عند التمرير على الجوال
       if (window.innerWidth < 768 && hoveredCategory) {
         setHoveredCategory(null);
@@ -333,24 +345,51 @@ export default function Header() {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-white'}`}>
-      
-      {/* الهيدر الرئيسي - Yelp Style */}
-      <div className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-14">
-            
-            {/* Logo */}
-            <Link href="/" className="flex items-center shrink-0">
-              <span className="text-2xl font-bold text-red-500">
-                {isArabic ? 'نبض' : 'Nabd'}
-              </span>
-            </Link>
+    <header className={`fixed top-0 left-0 right-0 z-50 bg-white transition-all duration-300 ${isScrolled ? 'shadow-md' : ''}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* السطر الأول: اللوجو + البحث + الإجراءات */}
+        <div className="flex items-center justify-between h-14">
+          
+          {/* Logo */}
+          <Link href="/" className="flex items-center shrink-0">
+            <span className="text-2xl font-bold text-red-500">
+              {isArabic ? 'نبض' : 'Nabd'}
+            </span>
+          </Link>
 
-            {/* Search Bar - Desktop (Yelp Style) */}
-            <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-2xl mx-6">
+          {/* الفئات المصغرة - تظهر عند التمرير للأسفل على Desktop */}
+          {isScrollingDown && (
+            <div className="hidden md:flex items-center gap-1">
+              {CATEGORIES.map((category) => {
+                const isSelected = hoveredCategory === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    data-category-button={category.id}
+                    onClick={() => setHoveredCategory(isSelected ? null : category.id)}
+                    className={`px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
+                      isSelected ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {isArabic ? category.name : category.nameEn}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Search Bar - Desktop */}
+          <form onSubmit={handleSearch} className={`hidden md:flex items-center flex-1 max-w-md mx-4 transition-all duration-300 ${isScrollingDown ? 'max-w-[40px]' : ''}`}>
+            {isScrollingDown ? (
+              <button
+                type="button"
+                onClick={() => router.push('/search')}
+                className="p-2 text-gray-600 hover:text-gray-900"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            ) : (
               <div className="flex items-center w-full border border-gray-300 rounded-full overflow-hidden focus-within:border-gray-500 transition-colors bg-white shadow-sm">
-                
                 {/* حقل البحث */}
                 <div className="flex-1 flex items-center">
                   <Search className="w-5 h-5 text-gray-400 mr-3 ml-3 shrink-0" />
@@ -400,192 +439,216 @@ export default function Header() {
                   )}
                 </div>
               </div>
-            </form>
+            )}
+          </form>
 
-            {/* Actions - Desktop */}
-            <div className="hidden md:flex items-center gap-1">
-              <Link
-                href="/write-review"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-              >
-                <PenSquare className="w-4 h-4" />
-                <span>{isArabic ? 'اكتب تقييم' : 'Write a Review'}</span>
-              </Link>
+          {/* Actions - Desktop */}
+          <div className="hidden md:flex items-center gap-1">
+            {!isScrollingDown && (
+              <>
+                <Link
+                  href="/write-review"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <PenSquare className="w-4 h-4" />
+                  <span>{isArabic ? 'اكتب تقييم' : 'Write a Review'}</span>
+                </Link>
 
-              <Link
-                href="/business"
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-              >
-                <span>{isArabic ? 'للأعمال' : 'For Businesses'}</span>
-              </Link>
+                <Link
+                  href="/business"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <span>{isArabic ? 'للأعمال' : 'For Businesses'}</span>
+                </Link>
+              </>
+            )}
 
-              <div className="relative" ref={userMenuRef}>
-                {user ? (
-                  <button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">
-                        {(user.firstName?.[0] || 'U').toUpperCase()}
-                      </span>
-                    </div>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href="/auth/login"
-                      className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-                    >
-                      {isArabic ? 'تسجيل الدخول' : 'Log In'}
-                    </Link>
-                    <Link
-                      href="/auth/signup"
-                      className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-full transition-colors"
-                    >
-                      {isArabic ? 'انضمام' : 'Sign Up'}
-                    </Link>
+            <div className="relative" ref={userMenuRef}>
+              {user ? (
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {(user.firstName?.[0] || 'U').toUpperCase()}
+                    </span>
                   </div>
-                )}
-
-                {isUserMenuOpen && user && (
-                  <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="font-bold text-gray-900">{user.firstName} {user.lastName}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                    </div>
-                    
-                    <Link href="/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <User className="w-4 h-4" />
-                      {isArabic ? 'الملف الشخصي' : 'Profile'}
-                    </Link>
-                    
-                    <Link href="/favorites" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <Heart className="w-4 h-4" />
-                      {isArabic ? 'المفضلة' : 'Favorites'}
-                    </Link>
-                    
-                    <Link href="/my-listings" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <Store className="w-4 h-4" />
-                      {isArabic ? 'إعلاناتي' : 'My Listings'}
-                    </Link>
-                    
-                    <Link href="/settings" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <Settings className="w-4 h-4" />
-                      {isArabic ? 'الإعدادات' : 'Settings'}
-                    </Link>
-                    
-                    <div className="h-[1px] bg-gray-100 my-2" />
-                    
-                    <button onClick={() => { signOut(); setIsUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50">
-                      <LogOut className="w-4 h-4" />
-                      {isArabic ? 'تسجيل الخروج' : 'Log Out'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Actions - Mobile (Yelp Style) */}
-            <div className="flex md:hidden items-center gap-2">
-              <button
-                onClick={() => router.push('/search')}
-                className="p-2 text-gray-600 hover:text-gray-900"
-              >
-                <Search className="w-6 h-6" />
-              </button>
-
-              <div className="relative" ref={userMenuRef}>
-                {user ? (
-                  <button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="p-1"
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/auth/login"
+                    className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">
-                        {(user.firstName?.[0] || 'U').toUpperCase()}
-                      </span>
-                    </div>
-                  </button>
-                ) : (
+                    {isArabic ? 'تسجيل الدخول' : 'Log In'}
+                  </Link>
                   <Link
                     href="/auth/signup"
                     className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-full transition-colors"
                   >
                     {isArabic ? 'انضمام' : 'Sign Up'}
                   </Link>
-                )}
+                </div>
+              )}
 
-                {isUserMenuOpen && user && (
-                  <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="font-bold text-gray-900">{user.firstName} {user.lastName}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                    </div>
-                    
-                    <Link href="/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <User className="w-4 h-4" />
-                      {isArabic ? 'الملف الشخصي' : 'Profile'}
-                    </Link>
-                    
-                    <Link href="/favorites" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <Heart className="w-4 h-4" />
-                      {isArabic ? 'المفضلة' : 'Favorites'}
-                    </Link>
-                    
-                    <Link href="/write-review" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <PenSquare className="w-4 h-4" />
-                      {isArabic ? 'اكتب تقييم' : 'Write a Review'}
-                    </Link>
-                    
-                    <div className="h-[1px] bg-gray-100 my-2" />
-                    
-                    <button onClick={() => { signOut(); setIsUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50">
-                      <LogOut className="w-4 h-4" />
-                      {isArabic ? 'تسجيل الخروج' : 'Log Out'}
-                    </button>
+              {isUserMenuOpen && user && (
+                <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="font-bold text-gray-900">{user.firstName} {user.lastName}</p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
                   </div>
-                )}
-              </div>
+                  
+                  <Link href="/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <User className="w-4 h-4" />
+                    {isArabic ? 'الملف الشخصي' : 'Profile'}
+                  </Link>
+                  
+                  <Link href="/favorites" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <Heart className="w-4 h-4" />
+                    {isArabic ? 'المفضلة' : 'Favorites'}
+                  </Link>
+                  
+                  <Link href="/my-listings" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <Store className="w-4 h-4" />
+                    {isArabic ? 'إعلاناتي' : 'My Listings'}
+                  </Link>
+                  
+                  <Link href="/settings" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <Settings className="w-4 h-4" />
+                    {isArabic ? 'الإعدادات' : 'Settings'}
+                  </Link>
+                  
+                  <div className="h-[1px] bg-gray-100 my-2" />
+                  
+                  <button onClick={() => { signOut(); setIsUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50">
+                    <LogOut className="w-4 h-4" />
+                    {isArabic ? 'تسجيل الخروج' : 'Log Out'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Actions - Mobile */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={() => router.push('/search')}
+              className="p-2 text-gray-600 hover:text-gray-900"
+            >
+              <Search className="w-6 h-6" />
+            </button>
+
+            <div className="relative" ref={userMenuRef}>
+              {user ? (
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="p-1"
+                >
+                  <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {(user.firstName?.[0] || 'U').toUpperCase()}
+                    </span>
+                  </div>
+                </button>
+              ) : (
+                <Link
+                  href="/auth/signup"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-full transition-colors"
+                >
+                  {isArabic ? 'انضمام' : 'Sign Up'}
+                </Link>
+              )}
+
+              {isUserMenuOpen && user && (
+                <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="font-bold text-gray-900">{user.firstName} {user.lastName}</p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                  </div>
+                  
+                  <Link href="/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <User className="w-4 h-4" />
+                    {isArabic ? 'الملف الشخصي' : 'Profile'}
+                  </Link>
+                  
+                  <Link href="/favorites" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <Heart className="w-4 h-4" />
+                    {isArabic ? 'المفضلة' : 'Favorites'}
+                  </Link>
+                  
+                  <Link href="/write-review" onClick={() => setIsUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    <PenSquare className="w-4 h-4" />
+                    {isArabic ? 'اكتب تقييم' : 'Write a Review'}
+                  </Link>
+                  
+                  <div className="h-[1px] bg-gray-100 my-2" />
+                  
+                  <button onClick={() => { signOut(); setIsUserMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50">
+                    <LogOut className="w-4 h-4" />
+                    {isArabic ? 'تسجيل الخروج' : 'Log Out'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* شريط الفئات */}
-      <div 
-        className="border-b border-gray-200 bg-white"
-        onClick={() => {
-          // إغلاق القائمة عند النقر على الشريط نفسه (وليس على زر فئة)
-          if (hoveredCategory) {
-            setHoveredCategory(null);
-          }
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-2 sm:px-4">
-          <div className="relative flex items-center py-3">
-            {/* سهم التمرير لليسار */}
-            {canScrollLeft && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  scrollCategories('left');
-                }}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-all"
-              >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
-              </button>
-            )}
-
-            {/* الفئات القابلة للتمرير */}
-            <div
-              ref={categoryScrollRef}
-              onScroll={checkScroll}
-              className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide px-6"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
+        {/* السطر الثاني: الفئات */}
+        {/* على الجوال: الأيقونات تختفي عند التمرير للأسفل */}
+        {/* على الديسكتوب: السطر كاملاً يختفي عند التمرير للأسفل */}
+        <div className={`border-t border-gray-100 md:hidden`}>
+          <div className="flex items-center justify-center py-2 gap-2">
+            {CATEGORIES.map((category) => {
+              const isSelected = hoveredCategory === category.id;
+              return (
+                <div 
+                  key={category.id}
+                  ref={(el) => { categoryRefs.current[category.id] = el; }}
+                  className="relative shrink-0"
+                  onMouseEnter={() => {
+                    if (window.innerWidth >= 768) {
+                      setHoveredCategory(category.id);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (window.innerWidth >= 768) {
+                      setHoveredCategory(null);
+                    }
+                  }}
+                >
+                  <button 
+                    data-category-button={category.id}
+                    onClick={() => setHoveredCategory(isSelected ? null : category.id)}
+                    className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all group"
+                  >
+                    {/* أيقونة SVG كبيرة - تختفي عند التمرير للأسفل على الجوال */}
+                    <div className={`transition-all duration-200 ${isScrollingDown ? 'h-0 opacity-0 overflow-hidden' : 'h-10 opacity-100'}`}>
+                      <Image 
+                        src={category.imageIcon}
+                        alt={isArabic ? category.name : category.nameEn}
+                        width={40}
+                        height={40}
+                        className={`transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
+                      />
+                    </div>
+                    <span className={`text-sm font-medium whitespace-nowrap transition-colors ${
+                      isSelected ? 'text-gray-900 font-semibold' : 'text-gray-600 group-hover:text-gray-900'
+                    }`}>
+                      {isArabic ? category.name : category.nameEn}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+        {/* السطر الثاني للديسكتوب - يختفي كاملاً عند التمرير */}
+        {!isScrollingDown && (
+          <div className="hidden md:block border-t border-gray-100">
+            <div className="flex items-center justify-center py-2 gap-4">
               {CATEGORIES.map((category) => {
-                const Icon = category.icon;
                 const isSelected = hoveredCategory === category.id;
                 return (
                   <div 
@@ -593,64 +656,36 @@ export default function Header() {
                     ref={(el) => { categoryRefs.current[category.id] = el; }}
                     className="relative shrink-0"
                     onMouseEnter={() => {
-                      if (window.innerWidth >= 768) {
-                        setHoveredCategory(category.id);
-                      }
+                      setHoveredCategory(category.id);
                     }}
                     onMouseLeave={() => {
-                      if (window.innerWidth >= 768) {
-                        setHoveredCategory(null);
-                      }
+                      setHoveredCategory(null);
                     }}
                   >
                     <button 
                       data-category-button={category.id}
-                      onClick={(e) => {
-                        e.stopPropagation(); // منع انتشار الحدث للشريط
-                        // تبديل حالة القسم - فتح/إغلاق
-                        setHoveredCategory(prev => prev === category.id ? null : category.id);
-                      }}
-                      className="flex flex-col items-center gap-1 px-3 sm:px-4 py-1.5 min-w-[60px] sm:min-w-[72px] group"
+                      onClick={() => setHoveredCategory(isSelected ? null : category.id)}
+                      className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl transition-all group"
                     >
-                      {/* الأيقونة الملونة */}
-                      <Icon 
-                        className="w-6 h-6 sm:w-6 sm:h-6 transition-all duration-200"
-                        style={{ 
-                          color: isSelected ? '#111' : category.color,
-                          opacity: isSelected ? 1 : 0.75,
-                          strokeWidth: isSelected ? 2.5 : 2
-                        }}
+                      <Image 
+                        src={category.imageIcon}
+                        alt={isArabic ? category.name : category.nameEn}
+                        width={48}
+                        height={48}
+                        className={`transition-all duration-200 ${isSelected ? 'scale-110' : ''}`}
                       />
-                      {/* النص */}
-                      <span className={`text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
-                        isSelected ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-900'
+                      <span className={`text-sm font-medium whitespace-nowrap transition-colors ${
+                        isSelected ? 'text-gray-900 font-semibold' : 'text-gray-600 group-hover:text-gray-900'
                       }`}>
                         {isArabic ? category.name : category.nameEn}
                       </span>
-                      {/* مؤشر التحديد */}
-                      <div className={`h-0.5 w-4 sm:w-5 rounded-full transition-all ${
-                        isSelected ? 'bg-gray-900' : 'bg-transparent'
-                      }`} />
                     </button>
                   </div>
                 );
               })}
             </div>
-
-            {/* سهم التمرير لليمين */}
-            {canScrollRight && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  scrollCategories('right');
-                }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm shadow flex items-center justify-center hover:bg-white transition-all"
-              >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
-              </button>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* القائمة المنسدلة */}
@@ -661,7 +696,7 @@ export default function Header() {
           style={{
             left: '50%',
             transform: 'translateX(-50%)',
-            top: '130px', // أسفل الشريط مباشرة
+            top: '130px',
           }}
           onMouseEnter={() => {
             if (window.innerWidth >= 768) {
@@ -677,24 +712,37 @@ export default function Header() {
           {/* الخط الأحمر العلوي */}
           <div className="h-[3px] bg-red-500 rounded-t-sm w-full" />
           
-          {/* محتوى القائمة */}
-          <div className="bg-white rounded-b-lg shadow-2xl border border-gray-200 border-t-0 p-4 w-[320px] sm:w-[360px]">
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-              {currentCategory.subcategories.map((sub) => {
-                const SubIcon = sub.icon;
-                return (
-                  <Link
-                    key={sub.id}
-                    href={`/${sub.id}`}
-                    onClick={() => setHoveredCategory(null)}
-                    className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-red-500 hover:bg-red-50 rounded transition-colors group"
-                  >
-                    <SubIcon className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors shrink-0" />
-                    <span>{isArabic ? sub.name : sub.nameEn}</span>
-                  </Link>
-                );
-              })}
-            </div>
+          {/* محتوى القائمة مع المجموعات */}
+          <div className="bg-white rounded-b-lg shadow-2xl border border-gray-200 border-t-0 p-4 w-[360px] sm:w-[420px] max-h-[70vh] overflow-y-auto">
+            {currentCategory.groups?.map((group, groupIndex) => (
+              <div key={groupIndex} className="mb-3 last:mb-0">
+                {/* عنوان المجموعة */}
+                <h4 className="text-xs font-bold text-gray-400 uppercase mb-2 px-1">
+                  {isArabic ? group.name : group.nameEn}
+                </h4>
+                {/* أقسام المجموعة */}
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                  {group.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    return (
+                      <Link
+                        key={item.id}
+                        href={`/${item.id}`}
+                        onClick={() => setHoveredCategory(null)}
+                        className="flex items-center gap-2 px-2 py-2 text-sm text-gray-700 hover:text-red-500 hover:bg-red-50 rounded transition-colors group"
+                      >
+                        <ItemIcon className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors shrink-0" />
+                        <span>{isArabic ? item.name : item.nameEn}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+                {/* فاصل بين المجموعات */}
+                {groupIndex < (currentCategory.groups?.length || 0) - 1 && (
+                  <div className="h-px bg-gray-100 mt-3" />
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}

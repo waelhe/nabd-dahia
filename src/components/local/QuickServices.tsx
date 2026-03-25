@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ChevronDown, UtensilsCrossed, Coffee, ShoppingCart, ShoppingBag, Fuel, Car, Stethoscope, Heart, Sparkles, GraduationCap, Trophy, MapPin, Building, Briefcase, Home, Package, Grid3X3, Scale, Wrench } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -92,27 +93,95 @@ const componentMap: Record<string, React.ComponentType> = {
   'event-services': EventServices,
 };
 
-// Airbnb-style categories with clean icons
-const categories = [
-  { id: 'professionals', title: 'مهن حرة', titleEn: 'Professionals', icon: Scale, color: '#6366F1', isNew: true },
-  { id: 'restaurants', title: 'مطاعم', titleEn: 'Restaurants', icon: UtensilsCrossed, color: '#FF5A5F' },
-  { id: 'cafes', title: 'مقاهي', titleEn: 'Cafes', icon: Coffee, color: '#8B5A2B' },
-  { id: 'markets', title: 'أسواق', titleEn: 'Markets', icon: ShoppingCart, color: '#00A699' },
-  { id: 'retail-shops', title: 'محلات', titleEn: 'Shops', icon: ShoppingBag, color: '#FC642D' },
-  { id: 'gas-stations', title: 'بنزين', titleEn: 'Gas', icon: Fuel, color: '#484848' },
-  { id: 'car-services', title: 'سيارات', titleEn: 'Cars', icon: Car, color: '#428BFF' },
-  { id: 'doctors', title: 'أطباء', titleEn: 'Doctors', icon: Stethoscope, color: '#E31C5F' },
-  { id: 'pharmacies', title: 'صيدليات', titleEn: 'Pharmacies', icon: Heart, color: '#00A699' },
-  { id: 'beauty', title: 'تجميل', titleEn: 'Beauty', icon: Sparkles, color: '#D939A0' },
-  { id: 'education', title: 'تعليم', titleEn: 'Education', icon: GraduationCap, color: '#428BFF' },
-  { id: 'sports', title: 'رياضة', titleEn: 'Sports', icon: Trophy, color: '#FFB400' },
-  { id: 'places', title: 'سياحة', titleEn: 'Tourism', icon: MapPin, color: '#00A699' },
-  { id: 'hotels', title: 'فنادق', titleEn: 'Hotels', icon: Building, color: '#9B59B6' },
-  { id: 'jobs', title: 'وظائف', titleEn: 'Jobs', icon: Briefcase, color: '#428BFF' },
-  { id: 'realestate', title: 'عقارات', titleEn: 'Real Estate', icon: Home, color: '#00A699' },
-  { id: 'used', title: 'مستعمل', titleEn: 'Used', icon: Package, color: '#FC642D' },
-  { id: 'craftsmen', title: 'خدمات', titleEn: 'Services', icon: Wrench, color: '#78716C' },
+// الأجزاء الرئيسية مع مجموعاتها وأقسامها
+const PARTS = [
+  {
+    id: 'directory',
+    title: 'اكتشف',
+    titleEn: 'Discover',
+    color: '#00A699',
+    groups: [
+      {
+        id: 'food',
+        title: 'طعام وضيافة',
+        titleEn: 'Food & Hospitality',
+        color: '#FF5A5F',
+        sections: [
+          { id: 'restaurants', title: 'مطاعم', titleEn: 'Restaurants', icon: UtensilsCrossed, color: '#FF5A5F', imageIcon: '/images/categories/restaurants.jpg' },
+          { id: 'cafes', title: 'مقاهي', titleEn: 'Cafes', icon: Coffee, color: '#8B5A2B', imageIcon: '/images/categories/cafes.jpg' },
+          { id: 'hotels', title: 'فنادق', titleEn: 'Hotels', icon: Building, color: '#9B59B6', imageIcon: '/images/categories/hotels.jpg' },
+        ]
+      },
+      {
+        id: 'health',
+        title: 'صحة وجمال',
+        titleEn: 'Health & Beauty',
+        color: '#E31C5F',
+        sections: [
+          { id: 'doctors', title: 'أطباء', titleEn: 'Doctors', icon: Stethoscope, color: '#E31C5F', imageIcon: '/images/categories/doctor.jpg' },
+          { id: 'pharmacies', title: 'صيدليات', titleEn: 'Pharmacies', icon: Heart, color: '#00A699', imageIcon: '/images/categories/pharmacy.jpg' },
+          { id: 'beauty', title: 'تجميل', titleEn: 'Beauty', icon: Sparkles, color: '#D939A0', imageIcon: '/images/categories/beauty.jpg' },
+        ]
+      },
+      {
+        id: 'services',
+        title: 'خدمات',
+        titleEn: 'Services',
+        color: '#78716C',
+        sections: [
+          { id: 'craftsmen', title: 'حرفيين', titleEn: 'Craftsmen', icon: Wrench, color: '#78716C', imageIcon: '/images/categories/services.jpg' },
+          { id: 'car-services', title: 'سيارات', titleEn: 'Cars', icon: Car, color: '#428BFF', imageIcon: '/images/categories/cars.jpg' },
+          { id: 'gas-stations', title: 'بنزين', titleEn: 'Gas', icon: Fuel, color: '#484848', imageIcon: '/images/categories/gas.jpg' },
+          { id: 'professionals', title: 'مهن حرة', titleEn: 'Professionals', icon: Scale, color: '#6366F1', isNew: true, imageIcon: '/images/categories/professionals.jpg' },
+        ]
+      },
+      {
+        id: 'shopping',
+        title: 'تسوق',
+        titleEn: 'Shopping',
+        color: '#FC642D',
+        sections: [
+          { id: 'markets', title: 'أسواق', titleEn: 'Markets', icon: ShoppingCart, color: '#00A699', imageIcon: '/images/categories/markets.jpg' },
+          { id: 'retail-shops', title: 'محلات', titleEn: 'Shops', icon: ShoppingBag, color: '#FC642D', imageIcon: '/images/categories/shops.jpg' },
+        ]
+      },
+      {
+        id: 'tourism',
+        title: 'سياحة',
+        titleEn: 'Tourism',
+        color: '#00A699',
+        sections: [
+          { id: 'places', title: 'سياحة', titleEn: 'Tourism', icon: MapPin, color: '#00A699', imageIcon: '/images/categories/tourism.jpg' },
+        ]
+      },
+    ]
+  },
 ];
+
+// تحويل الأجزاء إلى قائمة مسطحة للعرض (الجزء → الأقسام مع اسم المجموعة)
+const categories: Array<{id: string; title: string; titleEn: string; icon: any; color: string; imageIcon?: string; isNew?: boolean; isPartHeader?: boolean; groupTitle?: string; groupTitleEn?: string; groupColor?: string}> = [];
+PARTS.forEach(part => {
+  // إضافة عنوان الجزء
+  categories.push({
+    id: `part-${part.id}`,
+    title: part.title,
+    titleEn: part.titleEn,
+    icon: null,
+    color: part.color,
+    isPartHeader: true,
+  });
+  // إضافة أقسام المجموعات مع معلومات المجموعة
+  part.groups?.forEach(group => {
+    group.sections.forEach(section => {
+      categories.push({
+        ...section,
+        groupTitle: group.title,
+        groupTitleEn: group.titleEn,
+        groupColor: group.color,
+      });
+    });
+  });
+});
 
 export default function QuickServices() {
   const { language } = useLanguage();
@@ -181,7 +250,7 @@ export default function QuickServices() {
   return (
     <>
       {/* Airbnb Style Categories */}
-      <section className="bg-white sticky top-0 z-40 border-b border-gray-100">
+      <section className="bg-white z-40 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="relative flex items-center py-4">
             {/* Left scroll button */}
@@ -202,6 +271,30 @@ export default function QuickServices() {
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {categories.map((category) => {
+                // عنصر عنوان الجزء
+                if (category.isPartHeader) {
+                  return (
+                    <div
+                      key={category.id}
+                      className="flex flex-col items-center justify-center min-w-[70px] flex-shrink-0 px-2"
+                    >
+                      {/* خط ملون */}
+                      <div 
+                        className="w-1.5 h-16 rounded-full mb-2"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      {/* اسم الجزء */}
+                      <span 
+                        className="text-sm font-bold whitespace-nowrap"
+                        style={{ color: category.color }}
+                      >
+                        {isArabic ? category.title : category.titleEn}
+                      </span>
+                    </div>
+                  );
+                }
+
+                // عنصر القسم العادي
                 const Icon = category.icon;
                 const isSelected = selectedCategory === category.id;
 
@@ -211,7 +304,7 @@ export default function QuickServices() {
                     onClick={() => setSelectedCategory(isSelected ? null : category.id)}
                     className="flex flex-col items-center gap-2 min-w-[60px] group flex-shrink-0"
                   >
-                    {/* Icon */}
+                    {/* Image or Icon */}
                     <div className="relative">
                       {/* New badge */}
                       {category.isNew && (
@@ -220,15 +313,27 @@ export default function QuickServices() {
                         </span>
                       )}
                       
-                      {/* Clean Icon */}
-                      <Icon 
-                        className="w-6 h-6 transition-all duration-200"
-                        style={{ 
-                          color: isSelected ? '#111' : category.color,
-                          opacity: isSelected ? 1 : 0.7,
-                          strokeWidth: isSelected ? 2.5 : 2
-                        }}
-                      />
+                      {/* Image from local folder */}
+                      {category.imageIcon && (
+                        <div className={`w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden transition-all duration-200 relative ${isSelected ? 'ring-2 ring-gray-900 ring-offset-2' : 'opacity-90 group-hover:opacity-100 shadow-md'}`}>
+                          <Image 
+                            src={category.imageIcon} 
+                            alt={isArabic ? category.title : category.titleEn}
+                            width={224}
+                            height={224}
+                            className="object-cover w-full h-full"
+                          />
+                          {/* اسم المجموعة على الصورة */}
+                          {category.groupTitle && (
+                            <div 
+                              className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold text-white"
+                              style={{ backgroundColor: category.groupColor }}
+                            >
+                              {isArabic ? category.groupTitle : category.groupTitleEn}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Label */}
@@ -295,43 +400,81 @@ export default function QuickServices() {
           <SheetHeader className="pb-4">
             <SheetTitle>{isArabic ? 'جميع الخدمات' : 'All Services'}</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4 overflow-y-auto">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              const isSelected = selectedCategory === category.id;
-              
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => {
-                    setSelectedCategory(isSelected ? null : category.id);
-                    setShowAllSheet(false);
-                  }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  <div className="relative">
-                    {category.isNew && (
-                      <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] px-1 py-0.5 rounded-full font-medium z-10">
-                        جديد
-                      </span>
-                    )}
-                    <Icon 
-                      className="w-7 h-7"
-                      style={{ 
-                        color: isSelected ? '#111' : category.color,
-                        opacity: isSelected ? 1 : 0.7,
-                        strokeWidth: isSelected ? 2.5 : 2
-                      }}
-                    />
-                  </div>
-                  <span className={`text-xs font-medium text-center ${
-                    isSelected ? 'text-gray-900 font-semibold' : 'text-gray-600'
-                  }`}>
-                    {isArabic ? category.title : category.titleEn}
+          <div className="overflow-y-auto space-y-4">
+            {PARTS.map((part) => (
+              <div key={part.id}>
+                {/* عنوان الجزء */}
+                <div className="flex items-center gap-2 mb-2 px-2">
+                  <div 
+                    className="w-1 h-6 rounded-full"
+                    style={{ backgroundColor: part.color }}
+                  />
+                  <span 
+                    className="text-sm font-bold"
+                    style={{ color: part.color }}
+                  >
+                    {isArabic ? part.title : part.titleEn}
                   </span>
-                </button>
-              );
-            })}
+                </div>
+                {/* المجموعات */}
+                {part.groups?.map((group) => (
+                  <div key={group.id} className="mb-3">
+                    {/* عنوان المجموعة */}
+                    <div className="flex items-center gap-2 mb-1 px-2">
+                      <div 
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: group.color }}
+                      />
+                      <span 
+                        className="text-xs font-semibold"
+                        style={{ color: group.color }}
+                      >
+                        {isArabic ? group.title : group.titleEn}
+                      </span>
+                    </div>
+                    {/* أقسام المجموعة */}
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                      {group.sections.map((section) => {
+                        const Icon = section.icon;
+                        const isSelected = selectedCategory === section.id;
+                        
+                        return (
+                          <button
+                            key={section.id}
+                            onClick={() => {
+                              setSelectedCategory(isSelected ? null : section.id);
+                              setShowAllSheet(false);
+                            }}
+                            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="relative">
+                              {section.isNew && (
+                                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] px-1 py-0.5 rounded-full font-medium z-10">
+                                  جديد
+                                </span>
+                              )}
+                              <Icon 
+                                className="w-7 h-7"
+                                style={{ 
+                                  color: isSelected ? '#111' : section.color,
+                                  opacity: isSelected ? 1 : 0.7,
+                                  strokeWidth: isSelected ? 2.5 : 2
+                                }}
+                              />
+                            </div>
+                            <span className={`text-xs font-medium text-center ${
+                              isSelected ? 'text-gray-900 font-semibold' : 'text-gray-600'
+                            }`}>
+                              {isArabic ? section.title : section.titleEn}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         </SheetContent>
       </Sheet>

@@ -11,7 +11,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -39,6 +39,23 @@ export default function BottomNav() {
   const { language } = useLanguage();
   const isArabic = language === 'ar';
   const [activeId, setActiveId] = useState('home');
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const lastScrollYRef = useRef(0);
+
+  // تتبع اتجاه التمرير
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollYRef.current && currentScrollY > 80) {
+        setIsScrollingDown(true);
+      } else {
+        setIsScrollingDown(false);
+      }
+      lastScrollYRef.current = currentScrollY;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems: NavItem[] = [
     {
@@ -59,9 +76,8 @@ export default function BottomNav() {
       id: 'market',
       name: 'السوق',
       nameEn: 'Market',
-      path: '/#marketplace',
+      path: '/market',
       icon: ShoppingBag,
-      badge: 3,
     },
     {
       id: 'favorites',
@@ -86,7 +102,7 @@ export default function BottomNav() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+    <div className={`fixed bottom-0 left-0 right-0 z-50 md:hidden transition-all duration-300 ${isScrollingDown ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
       {/* Airplane-style background with blur */}
       <div className="bg-white/95 backdrop-blur-xl border-t border-gray-200/80 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         {/* Main Navigation */}

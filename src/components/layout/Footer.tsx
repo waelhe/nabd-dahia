@@ -4,99 +4,160 @@
  */
 
 /**
- * Footer Component
+ * Footer Component - Yelp Style
  * 
- * شريط التنقل السفلي - نبض قدسيا
+ * شريط التنقل السفلي - نبض الضاحية وقدسيا
  */
 
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { Facebook, Instagram, Mail, Phone, MapPin, Zap } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Globe, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Footer() {
   const { language } = useLanguage();
+  const isArabic = language === 'ar';
 
   const content = {
     ar: {
-      about: 'نبض الضاحية وقدسيا - منصتك المحلية لكل ما تحتاجه. صيدليات مناوبة، أطباء، سوق محلي، عقارات، ومجتمع نشط.',
-      quickLinks: 'روابط سريعة',
-      contact: 'تواصل معنا',
-      rights: 'نبض الضاحية وقدسيا - جميع الحقوق محفوظة',
-      links: [
-        { name: 'الرئيسية', path: '/' },
-        { name: 'السوق', path: '/marketplace' },
-        { name: 'العقارات', path: '/realestate' },
-        { name: 'المجتمع', path: '/community' },
-      ],
-      services: [
-        { name: 'صيدليات مناوبة', path: '/pharmacies' },
-        { name: 'أطباء', path: '/doctors' },
-        { name: 'خدمات', path: '/services' },
-      ],
+      about: {
+        title: 'عن نبض',
+        links: [
+          { name: 'من نحن', path: '/about' },
+          { name: 'اتصل بنا', path: '/contact' },
+          { name: 'وظائف', path: '/careers' },
+          { name: 'الأخبار', path: '/news' },
+        ]
+      },
+      discover: {
+        title: 'اكتشف',
+        links: [
+          { name: 'مطاعم ومقاهي', path: '/restaurants' },
+          { name: 'أطباء وصيدليات', path: '/doctors' },
+          { name: 'خدمات', path: '/services' },
+          { name: 'عقارات', path: '/real-estate' },
+          { name: 'وظائف شاغرة', path: '/jobs' },
+        ]
+      },
+      business: {
+        title: 'للأعمال',
+        links: [
+          { name: 'أضف نشاطك', path: '/add-business' },
+          { name: 'إعلانات', path: '/advertise' },
+          { name: 'دليل الأعمال', path: '/business' },
+        ]
+      },
+      directory: {
+        title: 'الدليل',
+        links: [
+          { name: 'صيدليات مناوبة', path: '/pharmacies' },
+          { name: 'أرقام الطوارئ', path: '/emergency' },
+          { name: 'حرفيين', path: '/craftsmen' },
+          { name: 'أسواق', path: '/markets' },
+        ]
+      },
+      cities: {
+        title: 'المناطق',
+        links: [
+          { name: 'قدسيا', path: '?location=qudsaya' },
+          { name: 'الضاحية', path: '?location=dahia' },
+          { name: 'الديماس', path: '?location=dimas' },
+        ]
+      },
+      rights: 'جميع الحقوق محفوظة © نبض الضاحية وقدسيا',
       privacy: 'سياسة الخصوصية',
       terms: 'شروط الاستخدام',
+      accessibility: 'إمكانية الوصول',
     },
     en: {
-      about: 'Nabd Dahia & Qudsaya - Your local platform for everything you need. On-duty pharmacies, doctors, local market, real estate, and active community.',
-      quickLinks: 'Quick Links',
-      contact: 'Contact Us',
-      rights: 'Nabd Dahia & Qudsaya - All rights reserved',
-      links: [
-        { name: 'Home', path: '/' },
-        { name: 'Market', path: '/marketplace' },
-        { name: 'Real Estate', path: '/realestate' },
-        { name: 'Community', path: '/community' },
-      ],
-      services: [
-        { name: 'On-Duty Pharmacies', path: '/pharmacies' },
-        { name: 'Doctors', path: '/doctors' },
-        { name: 'Services', path: '/services' },
-      ],
+      about: {
+        title: 'About',
+        links: [
+          { name: 'About Nabd', path: '/about' },
+          { name: 'Contact', path: '/contact' },
+          { name: 'Careers', path: '/careers' },
+          { name: 'News', path: '/news' },
+        ]
+      },
+      discover: {
+        title: 'Discover',
+        links: [
+          { name: 'Restaurants & Cafes', path: '/restaurants' },
+          { name: 'Doctors & Pharmacies', path: '/doctors' },
+          { name: 'Services', path: '/services' },
+          { name: 'Real Estate', path: '/real-estate' },
+          { name: 'Jobs', path: '/jobs' },
+        ]
+      },
+      business: {
+        title: 'For Business',
+        links: [
+          { name: 'Add Your Business', path: '/add-business' },
+          { name: 'Advertise', path: '/advertise' },
+          { name: 'Business Directory', path: '/business' },
+        ]
+      },
+      directory: {
+        title: 'Directory',
+        links: [
+          { name: 'On-Duty Pharmacies', path: '/pharmacies' },
+          { name: 'Emergency Numbers', path: '/emergency' },
+          { name: 'Craftsmen', path: '/craftsmen' },
+          { name: 'Markets', path: '/markets' },
+        ]
+      },
+      cities: {
+        title: 'Cities',
+        links: [
+          { name: 'Qudsaya', path: '?location=qudsaya' },
+          { name: 'Dahia', path: '?location=dahia' },
+          { name: 'Dimas', path: '?location=dimas' },
+        ]
+      },
+      rights: '© Nabd Dahia & Qudsaya. All rights reserved.',
       privacy: 'Privacy Policy',
       terms: 'Terms of Service',
+      accessibility: 'Accessibility',
     }
   };
 
-  const t = language === 'ar' ? content.ar : content.en;
+  const t = isArabic ? content.ar : content.en;
 
   return (
-    <footer className="bg-gray-900 text-gray-300 pt-8 pb-6 border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          {/* Brand Section */}
-          <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Zap className="w-5 h-5 text-yellow-300" />
-              </div>
-              <span className="text-xl font-black text-white">
-                {language === 'ar' ? 'نبض الضاحية وقدسيا' : 'Nabd Dahia & Qudsaya'}
-              </span>
-            </Link>
-            <p className="text-gray-400 leading-relaxed text-sm">
-              {t.about}
-            </p>
-            <div className="flex items-center gap-3">
-              <a href="#" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all">
-                <Instagram className="w-4 h-4" />
-              </a>
-            </div>
+    <footer className="bg-gray-100 border-t border-gray-200">
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Logo & Social Icons */}
+        <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-red-500">
+              {isArabic ? 'نبض' : 'Nabd'}
+            </span>
+          </Link>
+          
+          <div className="flex items-center gap-3">
+            <a href="#" className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all text-gray-600">
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all text-gray-600">
+              <Instagram className="w-5 h-5" />
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all text-gray-600">
+              <Twitter className="w-5 h-5" />
+            </a>
           </div>
+        </div>
 
-          {/* Quick Links */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          {/* About */}
           <div>
-            <h3 className="text-white font-bold text-base mb-4">{t.quickLinks}</h3>
-            <ul className="space-y-2">
-              {t.links.map((link) => (
+            <h3 className="text-sm font-bold text-gray-900 mb-4">{t.about.title}</h3>
+            <ul className="space-y-2.5">
+              {t.about.links.map((link) => (
                 <li key={link.path}>
-                  <Link href={link.path} className="text-sm hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                    <div className="w-1 h-1 rounded-full bg-emerald-500/50 group-hover:bg-emerald-400 transition-all" />
+                  <Link href={link.path} className="text-sm text-gray-600 hover:text-red-500 transition-colors">
                     {link.name}
                   </Link>
                 </li>
@@ -104,48 +165,112 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Discover */}
           <div>
-            <h3 className="text-white font-bold text-base mb-4">
-              {language === 'ar' ? 'الخدمات' : 'Services'}
-            </h3>
-            <ul className="space-y-2">
-              {t.services.map((service) => (
-                <li key={service.path}>
-                  <Link href={service.path} className="text-sm hover:text-emerald-400 transition-colors flex items-center gap-2 group">
-                    <div className="w-1 h-1 rounded-full bg-emerald-500/50 group-hover:bg-emerald-400 transition-all" />
-                    {service.name}
+            <h3 className="text-sm font-bold text-gray-900 mb-4">{t.discover.title}</h3>
+            <ul className="space-y-2.5">
+              {t.discover.links.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-sm text-gray-600 hover:text-red-500 transition-colors">
+                    {link.name}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* For Business */}
           <div>
-            <h3 className="text-white font-bold text-base mb-4">{t.contact}</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span className="text-sm">{language === 'ar' ? 'قدسيا، ريف دمشق' : 'Qudsaya, Damascus Suburbs'}</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-sm" dir="ltr">+963 11 123 4567</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-sm">info@nabdqudsaya.com</span>
-              </li>
+            <h3 className="text-sm font-bold text-gray-900 mb-4">{t.business.title}</h3>
+            <ul className="space-y-2.5">
+              {t.business.links.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-sm text-gray-600 hover:text-red-500 transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Directory */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 mb-4">{t.directory.title}</h3>
+            <ul className="space-y-2.5">
+              {t.directory.links.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-sm text-gray-600 hover:text-red-500 transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Cities */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 mb-4">{t.cities.title}</h3>
+            <ul className="space-y-2.5">
+              {t.cities.links.map((link) => (
+                <li key={link.path}>
+                  <Link href={link.path} className="text-sm text-gray-600 hover:text-red-500 transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-gray-500">
-          <p>&copy; {new Date().getFullYear()} {t.rights}</p>
-          <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-white transition-colors">{t.privacy}</a>
-            <a href="#" className="hover:text-white transition-colors">{t.terms}</a>
+        {/* Language & Country Selectors */}
+        <div className="mt-10 pt-6 border-t border-gray-200 flex flex-wrap items-center gap-4">
+          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+            <Globe className="w-4 h-4" />
+            <span>{isArabic ? 'العربية' : 'English'}</span>
+            <ChevronDown className="w-3 h-3" />
+          </button>
+          
+          <span className="text-gray-300">|</span>
+          
+          <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+            <span>{isArabic ? 'سوريا' : 'Syria'}</span>
+            <ChevronDown className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="bg-gray-200 border-t border-gray-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            {/* Copyright */}
+            <p className="text-xs text-gray-500">{t.rights}</p>
+
+            {/* Links */}
+            <div className="flex items-center gap-4 text-xs">
+              <Link href="/privacy" className="text-gray-600 hover:text-gray-900 transition-colors">
+                {t.privacy}
+              </Link>
+              <Link href="/terms" className="text-gray-600 hover:text-gray-900 transition-colors">
+                {t.terms}
+              </Link>
+              <Link href="/accessibility" className="text-gray-600 hover:text-gray-900 transition-colors">
+                {t.accessibility}
+              </Link>
+            </div>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-3">
+              <a href="#" className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all text-gray-600">
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a href="#" className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all text-gray-600">
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a href="#" className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all text-gray-600">
+                <Twitter className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
