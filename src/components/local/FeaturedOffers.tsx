@@ -115,14 +115,14 @@ const dataByRegion: Record<Region, Offer[]> = {
 export default function FeaturedOffers() {
   const { language } = useLanguage();
   const isArabic = language === 'ar';
-  const { region, regionName } = useRegion();
+  const { region } = useRegion();
   const offers = dataByRegion[region];
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 320;
+      const scrollAmount = 200;
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -131,122 +131,102 @@ export default function FeaturedOffers() {
   };
 
   return (
-    <section className="py-4 md:py-6 lg:py-8 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500 relative overflow-hidden">
-      {/* Static Background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-0 left-0 w-40 h-40 md:w-60 md:h-60 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-60 h-60 md:w-80 md:h-80 bg-yellow-300 rounded-full blur-3xl" />
+    <div className="mb-4 rounded-xl bg-gradient-to-r from-rose-500/10 via-orange-500/10 to-pink-500/10 border border-rose-200/50 p-3">
+      {/* Header صغير */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-gradient-to-br from-rose-500 to-orange-500 rounded-lg">
+            <Flame className="w-4 h-4 text-white" />
+          </div>
+          <h3 className="text-sm font-bold text-gray-800">
+            {isArabic ? '🔥 عروض حصرية' : '🔥 Exclusive Offers'}
+          </h3>
+          <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-xs rounded-full">
+            {offers.length}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => scroll('right')}
+            className="p-1 hover:bg-gray-200/50 rounded-full transition-colors"
+          >
+            <ChevronRight className="w-4 h-4 text-gray-500" />
+          </button>
+          <button
+            onClick={() => scroll('left')}
+            className="p-1 hover:bg-gray-200/50 rounded-full transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 relative z-10">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <div className="flex items-center gap-3 md:gap-4">
-            <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-              className="p-2.5 md:p-3 lg:p-4 bg-white rounded-xl md:rounded-2xl shadow-lg"
-            >
-              <Flame className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 text-rose-500" />
-            </motion.div>
-            <div>
-              <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-white flex items-center gap-2 md:gap-3">
-                {isArabic ? '🔥 عروض حصرية' : '🔥 Exclusive Offers'}
-                <span className="px-2 py-0.5 md:px-3 md:py-1 bg-white/20 rounded-full text-xs md:text-sm">
-                  {offers.length} {isArabic ? 'عروض' : 'offers'}
-                </span>
-              </h2>
-              <p className="text-sm md:text-base lg:text-lg text-white/80">
-                {isArabic ? `أفضل العروض في ${regionName}` : `Best offers in ${regionName}`}
-              </p>
+      {/* Offers Carousel مصغر */}
+      <div
+        ref={scrollRef}
+        className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide scroll-smooth"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {offers.map((offer) => (
+          <motion.div
+            key={offer.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex-shrink-0 w-36 bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+          >
+            {/* Image صغيرة */}
+            <div className="relative h-16 overflow-hidden">
+              <img
+                src={offer.image}
+                alt={isArabic ? offer.title : offer.titleEn}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              
+              {/* Discount Badge صغير */}
+              <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-xs font-bold rounded flex items-center gap-0.5">
+                <Tag className="w-2.5 h-2.5" />
+                {offer.discount}
+              </div>
+
+              {/* Badge حصري */}
+              {offer.badge && (
+                <div className="absolute top-1 left-1 px-1 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded">
+                  {isArabic ? offer.badge : offer.badgeEn}
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className="hidden sm:flex items-center gap-1 md:gap-2">
-            <button
-              onClick={() => scroll('right')}
-              className="p-2 md:p-3 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
-            >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-            </button>
-            <button
-              onClick={() => scroll('left')}
-              className="p-2 md:p-3 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-            </button>
-          </div>
-        </div>
+            {/* Content مختصر */}
+            <div className="p-2">
+              <h4 className="text-xs font-semibold text-gray-800 line-clamp-1 mb-0.5">
+                {isArabic ? offer.title : offer.titleEn}
+              </h4>
+              <p className="text-[10px] text-gray-400 flex items-center gap-0.5 mb-1">
+                <Store className="w-2.5 h-2.5" />
+                {isArabic ? offer.store : offer.storeEn}
+              </p>
 
-        {/* Offers Carousel */}
-        <div
-          ref={scrollRef}
-          className="flex gap-4 md:gap-6 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {offers.map((offer, index) => (
-            <motion.div
-              key={offer.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex-shrink-0 w-72 md:w-80 lg:w-96 bg-white rounded-2xl md:rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1"
-            >
-              {/* Image */}
-              <div className="relative h-36 md:h-44 lg:h-52 overflow-hidden">
-                <img
-                  src={offer.image}
-                  alt={isArabic ? offer.title : offer.titleEn}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                
-                {/* Discount Badge */}
-                <div className="absolute top-2 right-2 md:top-3 md:right-3 px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-sm md:text-base font-black rounded-full shadow-lg flex items-center gap-1 md:gap-2">
-                  <Tag className="w-4 h-4 md:w-5 md:h-5" />
-                  {offer.discount} OFF
-                </div>
-
-                {/* Exclusive Badge */}
-                {offer.badge && (
-                  <div className="absolute top-2 left-2 px-2 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
-                    {isArabic ? offer.badge : offer.badgeEn}
-                  </div>
-                )}
-
-                {/* End Time */}
-                <div className="absolute bottom-2 right-2 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-lg flex items-center gap-1 text-xs font-medium text-gray-700">
-                  <Clock className="w-3.5 h-3.5 text-amber-500" />
-                  {offer.endTime}
-                </div>
+              {/* Price صغير */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-bold text-rose-600">
+                  {offer.newPrice}
+                </span>
+                <span className="text-[10px] text-gray-400 line-through">
+                  {offer.oldPrice}
+                </span>
               </div>
 
-              {/* Content */}
-              <div className="p-4 md:p-5 lg:p-6">
-                <h3 className="font-bold text-gray-900 text-base md:text-lg lg:text-xl mb-1 md:mb-2 line-clamp-1">
-                  {isArabic ? offer.title : offer.titleEn}
-                </h3>
-                <p className="text-sm md:text-base text-gray-500 flex items-center gap-1 mb-3 md:mb-4">
-                  <Store className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  {isArabic ? offer.store : offer.storeEn}
-                </p>
-
-                {/* Price */}
-                <div className="flex items-center gap-3 md:gap-4">
-                  <span className="text-xl md:text-2xl lg:text-3xl font-black text-rose-600">
-                    {offer.newPrice}
-                    <span className="text-xs md:text-sm font-normal text-gray-500 mr-1">{isArabic ? 'ل.س' : 'S.P.'}</span>
-                  </span>
-                  <span className="text-sm md:text-base text-gray-400 line-through">
-                    {offer.oldPrice}
-                  </span>
-                </div>
+              {/* End Time */}
+              <div className="flex items-center gap-0.5 mt-1 text-[10px] text-amber-600">
+                <Clock className="w-2.5 h-2.5" />
+                {offer.endTime}
               </div>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }

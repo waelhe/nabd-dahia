@@ -121,13 +121,16 @@ export function HomePage() {
   const [activeLocalSection, setActiveLocalSection] = useState<string | null>(null);
   const [activeCommunitySection, setActiveCommunitySection] = useState<string | null>(null);
 
+  // Emergency section collapse state
+  const [isEmergencyOpen, setIsEmergencyOpen] = useState(false);
+
   // Market Section Icons - تأكد من تحديث هذه القائمة عند أي تغيير
   const marketIcons = [
-    { id: 'jobs', name: 'وظائف', nameEn: 'Jobs', icon: Briefcase },
     { id: 'realestate', name: 'عقارات', nameEn: 'Real Estate', icon: Home },
     { id: 'used', name: 'مستعمل', nameEn: 'Used', icon: Package },
     { id: 'classifieds', name: 'إعلانات', nameEn: 'Classifieds', icon: ShoppingBag },
     { id: 'craftsmen', name: 'سوق الخدمات', nameEn: 'Services Market', icon: Wrench },
+    { id: 'jobs', name: 'وظائف', nameEn: 'Jobs', icon: Briefcase },
   ];
 
   // Directory Groups Icons - للمجموعات الرئيسية
@@ -152,11 +155,11 @@ export function HomePage() {
 
   // Market Sections Configuration - تأكد من تحديث هذه القائمة عند أي تغيير
   const marketSections = [
-    { id: 'jobs', title: 'وظائف وفرص عمل', titleEn: 'Jobs & Opportunities', component: <Jobs /> },
     { id: 'realestate', title: 'عقارات وإيجارات', titleEn: 'Real Estate', component: <RealEstate /> },
     { id: 'used', title: 'سلع مستعملة', titleEn: 'Used Items', component: <UsedItems /> },
     { id: 'classifieds', title: 'إعلانات مبوبة', titleEn: 'Classifieds', component: <Classifieds /> },
     { id: 'craftsmen', title: 'سوق الخدمات', titleEn: 'Services Market', component: <Craftsmen /> },
+    { id: 'jobs', title: 'وظائف وفرص عمل', titleEn: 'Jobs & Opportunities', component: <Jobs /> },
   ];
 
   // Directory Groups Configuration - المجموعات الرئيسية
@@ -299,39 +302,8 @@ export function HomePage() {
       {/* ⚡ Quick Services - الوصول السريع */}
       <QuickServices />
 
-      {/* 🔥 Featured Offers */}
-      <FeaturedOffers />
-
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* 📞 الجزء الأول: دليل الطوارئ والمناوبات                                    */}
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <section className="mt-4 md:mt-6 mb-4 md:mb-6">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Part Header - مختصر */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl shadow-md">
-              <AlertTriangle className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-base font-black text-gray-900">
-                {isArabic ? '📞 دليل الطوارئ' : '📞 Emergency Guide'}
-              </h2>
-              <p className="text-xs text-gray-500">
-                {isArabic ? 'خدمات متاحة على مدار الساعة' : 'Services available 24/7'}
-              </p>
-            </div>
-          </div>
-
-          {/* Sections */}
-          <div className="rounded-xl border border-red-100 bg-red-50/50 overflow-hidden">
-            <div id="emergency"><UrgentServices /></div>
-            <div className="border-t border-red-100"><EmergencyContacts /></div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* 🏠 الجزء الثاني: السوق والإعلانات                                          */}
+      {/* 🏠 الجزء الأول: السوق والإعلانات                                          */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       <section id="market" className="mb-6 md:mb-8 bg-gradient-to-b from-teal-50 to-white py-8 md:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
@@ -347,6 +319,9 @@ export function HomePage() {
               <ChevronDown className="w-5 h-5 text-teal-500 rotate-90" />
             </Link>
           </div>
+
+          {/* 🔥 عروض حصرية مدمجة - مصغرة */}
+          <FeaturedOffers />
 
           {/* Quick Icons */}
           <QuickIcons 
@@ -369,6 +344,44 @@ export function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* 📞 الجزء الثاني: دليل الطوارئ والمناوبات                                    */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <section className="mt-4 md:mt-6 mb-4 md:mb-6">
+        <div className="max-w-7xl mx-auto px-4">
+          {/* Part Header - قابل للنقر للفتح والإغلاق */}
+          <button 
+            onClick={() => setIsEmergencyOpen(!isEmergencyOpen)}
+            className="flex items-center gap-3 mb-3 w-full text-right"
+          >
+            <div className="p-2 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl shadow-md">
+              <AlertTriangle className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-base font-black text-gray-900">
+                {isArabic ? '📞 دليل الطوارئ' : '📞 Emergency Guide'}
+              </h2>
+              <p className="text-xs text-gray-500">
+                {isArabic ? 'خدمات متاحة على مدار الساعة' : 'Services available 24/7'}
+              </p>
+            </div>
+            <ChevronDown 
+              className={`w-6 h-6 text-gray-500 transition-transform duration-300 ${
+                isEmergencyOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {/* Sections - تظهر فقط عند الفتح */}
+          {isEmergencyOpen && (
+            <div className="rounded-xl border border-red-100 bg-red-50/50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+              <div id="emergency"><UrgentServices /></div>
+              <div className="border-t border-red-100"><EmergencyContacts /></div>
+            </div>
+          )}
         </div>
       </section>
 
